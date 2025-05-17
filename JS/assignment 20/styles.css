@@ -1,0 +1,276 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 0;
+        font-family: Arial, sans-serif;
+        background-image: url('./—Pngtree—black textured background pocket planner_13472188.jpg');
+        background-size: cover;
+        min-height: 720px;
+        background-repeat: no-repeat;
+        background-position: center;
+        color: #e0e0e0;
+        /* position: relative; */
+        /* position: relative;
+        width: 300px;
+        height: 200px;
+        background-image: url('./—Pngtree—black\ textured\ background\ pocket\ planner_13472188.jpg');
+        background-size: cover;
+        filter: blur(1px);
+        z-index: -1;
+      */
+}
+body {
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif; 
+  }
+#app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+/* Bright Theme */
+/* body.light-theme {
+    background-color: #ffffff;
+    color: #333;
+}*/
+nav{
+    width: 100%;
+    display: flex;
+    justify-content: space-evenly;
+    height: 100px;
+    
+}
+.navbar {
+    display: flex;
+    justify-content: center;
+    /* justify-content: space-between; */
+    width: 85%;
+    padding: 10px 20px;
+    background-color: #2A2A2A;
+    /* background-color: #1B1B1B; */
+    border-radius: 15px;
+}
+.maincontainer{
+    position: static;
+    display: flex;
+    width: 300px;
+    height: 400px;
+    margin-top: 90px;
+    margin-left: 30%;
+    overflow: hidden;
+}
+span{
+    transition: transform 0.3s ease;
+    font-size:50px;
+    display: flex;
+    width: 300px;
+    height: 400px;
+    color: #2A2A2A;
+    size:100px ;
+    position: relative; /* Required for the animation */
+    animation: moveDown 2s ease-in-out forwards;
+}
+@keyframes moveDown {
+    0% {
+      transform: translateY(-100px); /* Start above the viewport */
+      opacity: 0; /* Initially invisible */
+    }
+    50% {
+      opacity: 0.5; /* Gradual fade-in */
+    }
+    100% {
+      transform: translateY(0); /* End at the original position */
+      opacity: 1; /* Fully visible */
+    }
+  }
+span:hover{
+    transform: scale(1.2);
+}
+.navbar.light-theme {
+    background-color: #f1f1f1;
+}
+.logInA{
+    width: 70px;
+    height: 40px;
+    margin-top: 10px;
+}
+.signUpA{
+    width: 70px;
+    height: 40px;
+    margin-top: 5px;
+}
+.auth-buttons button {
+    background-color: #2A2A2A;
+    color: #e0e0e0;
+    border: none;
+    padding: 10px;
+    margin-left: 5px;
+    /* margin: 4px; */
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.auth-buttons button:hover {
+    background-color: #555;
+}
+
+.auth-buttons button.light-theme {
+    background-color: #ddd;
+    color: #333;
+}
+
+.auth-form {
+    background-color: #2A2A2A;
+    padding: 20px;
+    border-radius: 10px;
+    width: 310px;
+    margin-top: 20px;
+    height: 250px;
+}
+.a1{
+    display: flex;
+    width: 95%;
+    height: 35px;
+    padding-left: 15px;
+    border: 1px solid black;
+    border-radius: 15px;
+    /* background: none; */
+}
+.a2{
+    display: flex;
+    width: 95%;
+    height: 35px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-left: 15px;
+    border: 1px solid black;
+    border-radius: 15px;
+    /* background: none; */
+}
+.button12{
+    display: flex;
+    justify-content: space-around;
+    margin-top: 25px;
+    color: #e0e0e0;
+
+}
+.h21{
+    margin: 50px;
+    margin-left: 25%;
+    margin-right: 25%;
+    size: 80px;
+    border-radius: 15px;
+    background-color: #2A2A2A;
+}
+.a3{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30%;
+    height: 40px;
+    border: 1px solid black;
+    border-radius: 15px;
+    background-color: rgba(228, 245, 130, 0.829);
+
+}
+.a4{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30%;
+    height: 40px;
+    border: 1px solid black;
+    border-radius: 15px;
+    /* margin-left: 145px; */
+}
+.auth-form.light-theme {
+    background-color: #fff;
+    color: #333;
+} 
+
+.logout{
+    display: flex;
+    width: 80px;
+    height: 50px;
+    position: fixed;
+    margin-top: 20px;
+    margin-left: 92%;
+    height: 25px;
+    border: 1px solid black;
+    border-radius: 50%;
+}
+.logoutButton{
+    /* display: flex;
+    width: 80px;
+    height: 50px;
+    position: fixed; 
+     margin-top: 20px;
+    margin-left: 92%;
+    height: 25px;
+    border: 1px solid black;
+    border-radius: 50%;*/
+    background-color: #2A2A2A;
+    color: #e0e0e0;
+    border: none;
+    padding: 10px;
+    /* margin-left: 5px; */
+    /* margin: 4px; */
+    cursor: pointer;
+    border-radius: 5px;
+} 
+.logA{
+    margin-top: 10px;
+    height: 80px;
+}
+
+#todoSection {
+    width: 80%;
+    max-width: 600px;
+    text-align: center;
+}
+.a5{
+    /* display: flex; */
+    margin-left: 10px;
+    cursor: pointer;
+    height: 30px;
+    border: #121212;
+    border-radius: 25%;
+}
+#todoInput {
+    width: 80%;
+    padding: 10px;
+    background-color: #2A2A2A;
+    color: #e0e0e0;
+    border: none;
+    border-radius: 15px;
+}
+
+#todoList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#todoList li {
+    background-color: #333;
+    padding: 10px;
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-color: #ddd;
+    border-radius: 5px;
+}
+#todoList button {
+    background-color: #444;
+    border: none;
+    color: #e0e0e0;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#todoList button:hover {
+    background-color: #555;
+}

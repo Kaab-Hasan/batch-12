@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Signup Form -->
+    <div class="container" id="signup-form">
+        <h2>Sign Up</h2>
+        <input type="text" id="signup-name" placeholder="Enter your name" required>
+        <input type="email" id="signup-email" placeholder="Enter your email" required>
+        <input type="password" id="signup-password" placeholder="Enter your password" required>
+        <button onclick="signup()">Sign Up</button>
+        <p class="toggle-link">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="container" id="login-form" style="display: none;">
+        <h2>Login</h2>
+        <input type="email" id="login-email" placeholder="Enter your email" required>
+        <input type="password" id="login-password" placeholder="Enter your password" required>
+        <button onclick="login()">Login</button>
+        <p class="toggle-link">Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a></p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

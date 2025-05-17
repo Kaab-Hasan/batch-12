@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Navbar -->
+        <!-- Navbar -->
+        <nav>
+            <div class="navbar">
+                <h1>To-Do App</h1>
+                
+            </div>
+            <div class="auth-buttons" id="auth-buttons">
+                <button class="logInA" id="loginButton" onclick="showLoginForm()">Log In</button>
+                <button class="signUpA" id="signUpButton" onclick="showSignUpForm()">Sign Up</button>
+                <button class="logA" id="logoutButton" onclick="logout()" style="display: block;"> Log Out</button>
+                
+                <!-- Theme Toggle Button -->
+                <!-- <button id="themeToggleButton" onclick="toggleTheme()">🌙</button> -->
+            </div>
+        </nav>
+        
+        
+        <!-- Login Form -->
+
+        <div id="loginForm" class="auth-form" style="display: none;">
+            <h1>Log In</h1>
+            <input class="a1" type="text" id="loginUsername" placeholder="Username" required>
+            <input class="a2" type="password" id="loginPassword" placeholder="Password" required>
+            <div class="button12">
+                <button class="a3" onclick="login()">Log In</button>
+                <button class="a4" onclick="closeLoginForm()">Cancel</button>
+                
+            </div>
+            
+        </div>
+        
+        <!-- Sign Up Form -->
+        <div id="signUpForm" class="auth-form" style="display: none;">
+            <h1 class="head">Sign Up</h1>
+            <input class="a1" type="text" id="signUpUsername" placeholder="Username" required>
+            <input class="a2" type="password" id="signUpPassword" placeholder="Password" required>
+            <div class="button12">
+                <button class="a3" onclick="signUp()">Sign Up</button>
+                <button class="a4" onclick="closeSignUpForm()">Cancel</button>
+            </div>
+            
+        </div>
+        <div id="maincontainer" class="maincontainer">
+            <span>
+                Don't You Are Using This Website<br>
+                Log In Now To Use This Website.
+            </span>
+        </div>
+
+        <!-- To-Do List Section -->
+        <div id="todoSection" style="display: none;">
+            <h2 class="h21">My To-Do List</h2>
+            <input type="text" id="todoInput" placeholder="Add new task">
+            <button class="a5" onclick="addTodo()">Add</button>
+            <ul id="todoList"></ul>
+        </div>
+        <!-- <div class="logout" id="logoutButton" ><button id="logoutButton"  onclick="logout()" style="display: block;"> Log Out</button></div> -->
+    </div>
+
+    <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</body>
+</html>

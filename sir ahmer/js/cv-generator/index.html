@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>CV Generator</h1>
+        <form id="cv-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="phone">Phone:</label>
+            <input type="tel" id="phone" name="phone" required>
+
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" required>
+
+            <label for="education">Education:</label>
+            <textarea id="education" name="education" required></textarea>
+
+            <label for="experience">Experience:</label>
+            <textarea id="experience" name="experience" required></textarea>
+
+            <label for="skills">Skills:</label>
+            <textarea id="skills" name="skills" required></textarea>
+
+            <label for="layout">Choose Layout:</label>
+            <select id="layout" name="layout">
+                <option value="layout1">Layout 1</option>
+                <option value="layout2">Layout 2</option>
+                <option value="layout3">Layout 3</option>
+                <option value="layout4">Layout 4</option>
+                <option value="layout5">Layout 5</option>
+                <option value="layout6">Layout 6</option>
+                <option value="layout7">Layout 7</option>
+                <option value="layout8">Layout 8</option>
+                <option value="layout9">Layout 9</option>
+                <option value="layout10">Layout 10</option>
+            </select>
+
+            <button type="submit">Generate CV</button>
+        </form>
+
+        <div id="cv-output"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

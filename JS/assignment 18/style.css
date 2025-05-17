@@ -1,0 +1,76 @@
+ :root {
+     --bg-color: #ffffff ;
+     --text-color: #000000;
+     --card-bg: #f3f3f3;
+    }
+    
+    [data-theme="dark"] {
+     --bg-color: #1e1e1e;
+     --text-color: #f3f3f3;
+     --card-bg: #333333;
+     }
+    
+     body {
+     font-family: Arial, sans-serif;
+     background-color: var(--bg-color);
+     color: var(--text-color);
+       margin: 0;
+       padding: 0;
+       display: flex;
+       justify-content: center;
+       align-items: center;
+       height: 100vh;
+       transition: background-color 0.3s, color 0.3s;
+      }
+    
+      .card {
+       background-color: var(--card-bg);
+       padding: 20px;
+       border-radius: 10px;
+       width: 350px;
+       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+       text-align: center;
+       transition: background-color 0.3s;
+      }
+    
+      .card img {
+       width: 100px;
+       height: 100px;
+       border-radius: 50%;
+       margin-bottom: 15px;
+      }
+    
+      .card h2 {
+       margin: 10px 0;
+      }
+    
+      .card p {
+       margin: 5px 0;
+       font-size: 14px;
+      }
+    
+      .card input {
+       padding: 10px;
+       width: calc(100% - 20px);
+       margin: 10px 0;
+       border: 1px solid #ccc;
+       border-radius: 5px;
+      }
+    
+      .toggle-theme {
+       position: absolute;
+       top: 20px;
+       right: 20px;
+       cursor: pointer;
+       background: none;
+       border: none;
+       font-size: 16px;
+       color: var(--text-color);
+       transition: color 0.3s;
+      }
+    
+      .error {
+       color: red;
+       font-size: 14px;
+       margin-top: 10px;
+      }

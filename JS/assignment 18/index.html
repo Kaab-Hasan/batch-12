@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Profile Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <button class="toggle-theme">Toggle Theme</button>
+     <div class="card">
+         <img id="avatar" src="" alt="User Avatar">
+         <h2 id="username">Loading...</h2>
+         <p id="email">Email: N/A</p>
+         <p id="followers">Followers: 0</p>
+         <p id="repos">Repositories: 0</p>
+         <input type="text" id="searchInput" placeholder="Enter GitHub username">
+         <button onclick="updateProfile()">Search</button>
+         <p id="error" class="error"></p>
+     </div>
+     <script src="app.js"></script>
+</body>
+</html>
