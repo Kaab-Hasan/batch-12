@@ -113,8 +113,8 @@ const AboutPage = () => {
           Our Values
         </Typography>
         <Grid container spacing={3}>
-          {values.map((value, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+          {values.map((value) => (
+            <Grid item xs={12} sm={6} md={3} key={value.title}>
               <Paper elevation={2} sx={{ p: 3, height: '100%', borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
                   {value.icon}
@@ -137,8 +137,8 @@ const AboutPage = () => {
           Meet Our Team
         </Typography>
         <Grid container spacing={4}>
-          {teamMembers.map((member, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+          {teamMembers.map((member) => (
+            <Grid item xs={12} sm={6} md={3} key={`${member.name}-${member.role}`}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
                 <CardMedia
                   component="img"

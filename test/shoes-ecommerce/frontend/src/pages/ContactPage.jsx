@@ -248,8 +248,8 @@ const ContactPage = () => {
         {/* Contact Information */}
         <Grid item xs={12} md={5}>
           <Grid container spacing={3} direction="column">
-            {contactInfo.map((info, index) => (
-              <Grid item key={index}>
+            {contactInfo.map((info) => (
+              <Grid item key={`contact-${info.title}`}>
                 <Card sx={{ borderRadius: 2 }}>
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -259,8 +259,12 @@ const ContactPage = () => {
                       </Typography>
                     </Box>
                     
-                    {info.content.map((line, i) => (
-                      <Typography key={i} variant="body1" sx={{ ml: isMobile ? 0 : 6 }}>
+                    {info.content.map((line, lineIndex) => (
+                      <Typography 
+                        key={`${info.title}-line-${lineIndex}`} 
+                        variant="body1" 
+                        sx={{ ml: isMobile ? 0 : 6 }}
+                      >
                         {line}
                       </Typography>
                     ))}

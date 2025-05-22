@@ -1,6 +1,5 @@
 import React from 'react';
 import { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import { API_URL } from '../config';
 
 export const AuthContext = createContext();
@@ -19,11 +18,6 @@ export const AuthProvider = ({ children }) => {
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        
-        // Set axios default headers with token
-        if (parsedUser.token) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${parsedUser.token}`;
-        }
       }
       setLoading(false);
     };
@@ -37,20 +31,30 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.post(`${API_URL}/api/users`, userData);
+      const response = await fetch(`${API_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+
+      const data = await response.json();
       
       // Save user to state and localStorage
-      setUser(res.data);
-      localStorage.setItem('user', JSON.stringify(res.data));
-      
-      // Set axios default headers with token
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
       
       setLoading(false);
-      return res.data;
+      return data;
     } catch (err) {
       setLoading(false);
-      const message = err.response?.data?.message || 'Registration failed';
+      const message = err.message || 'Registration failed';
       setError(message);
       throw new Error(message);
     }
@@ -62,20 +66,30 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.post(`${API_URL}/api/users/login`, { email, password });
+      const response = await fetch(`${API_URL}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Authentication failed');
+      }
+
+      const data = await response.json();
       
       // Save user to state and localStorage
-      setUser(res.data);
-      localStorage.setItem('user', JSON.stringify(res.data));
-      
-      // Set axios default headers with token
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
       
       setLoading(false);
-      return res.data;
+      return data;
     } catch (err) {
       setLoading(false);
-      const message = err.response?.data?.message || 'Authentication failed';
+      const message = err.message || 'Authentication failed';
       setError(message);
       throw new Error(message);
     }
@@ -87,20 +101,30 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.post(`${API_URL}/api/auth/admin/login`, { email, password });
+      const response = await fetch(`${API_URL}/auth/admin/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Admin authentication failed');
+      }
+
+      const data = await response.json();
       
       // Save user to state and localStorage
-      setUser(res.data);
-      localStorage.setItem('user', JSON.stringify(res.data));
-      
-      // Set axios default headers with token
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
       
       setLoading(false);
-      return res.data;
+      return data;
     } catch (err) {
       setLoading(false);
-      const message = err.response?.data?.message || 'Admin authentication failed';
+      const message = err.message || 'Admin authentication failed';
       setError(message);
       throw new Error(message);
     }
@@ -110,7 +134,6 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   // Update user profile
@@ -133,21 +156,30 @@ export const AuthProvider = ({ children }) => {
         formData.append('image', userData.profilePicture);
       }
       
-      const res = await axios.put(`${API_URL}/api/users/profile`, formData, {
+      const response = await fetch(`${API_URL}/users/profile`, {
+        method: 'PUT',
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${user.token}`,
         },
+        body: formData
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Profile update failed');
+      }
+
+      const data = await response.json();
       
       // Update user in state and localStorage
-      setUser(res.data);
-      localStorage.setItem('user', JSON.stringify(res.data));
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
       
       setLoading(false);
-      return res.data;
+      return data;
     } catch (err) {
       setLoading(false);
-      const message = err.response?.data?.message || 'Profile update failed';
+      const message = err.message || 'Profile update failed';
       setError(message);
       throw new Error(message);
     }

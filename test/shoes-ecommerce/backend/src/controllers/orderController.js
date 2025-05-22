@@ -6,36 +6,37 @@ import Order from '../models/orderModel.js';
 export const createOrder = async (req, res) => {
   try {
     const { 
-      products, 
+      orderItems, 
       shippingAddress, 
       paymentMethod, 
-      subtotal, 
+      itemsPrice, 
       taxPrice, 
       shippingPrice, 
       totalPrice 
     } = req.body;
 
     // Validate order data
-    if (products && products.length === 0) {
+    if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({ message: 'No order items' });
     }
 
     // Create order
     const order = await Order.create({
       user: req.user._id,
-      products,
+      orderItems,
       shippingAddress,
       paymentMethod,
-      subtotal: Number(subtotal),
+      itemsPrice: Number(itemsPrice),
       taxPrice: Number(taxPrice),
       shippingPrice: Number(shippingPrice),
       totalPrice: Number(totalPrice),
+      status: 'pending'
     });
 
     res.status(201).json(order);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error creating order:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 

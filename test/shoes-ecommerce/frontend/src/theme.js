@@ -3,18 +3,26 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2E3B55',
-      light: '#4A5B85',
-      dark: '#1A2238',
+      main: '#1976d2',
+      light: '#42a5f5',
+      dark: '#1565c0',
+      contrastText: '#fff',
     },
     secondary: {
-      main: '#F64C72',
-      light: '#F87D96',
-      dark: '#C53958',
+      main: '#9c27b0',
+      light: '#ba68c8',
+      dark: '#7b1fa2',
+      contrastText: '#fff',
+    },
+    error: {
+      main: '#d32f2f',
+      light: '#ef5350',
+      dark: '#c62828',
+      contrastText: '#fff',
     },
     background: {
-      default: '#f8f9fa',
-      paper: '#ffffff',
+      default: '#f5f5f5',
+      paper: '#fff',
     },
     text: {
       primary: '#333333',
@@ -28,34 +36,37 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: [
-      'Poppins',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
       'Roboto',
+      '"Helvetica Neue"',
       'Arial',
       'sans-serif',
     ].join(','),
     h1: {
-      fontWeight: 700,
       fontSize: '2.5rem',
+      fontWeight: 600,
     },
     h2: {
-      fontWeight: 600,
       fontSize: '2rem',
+      fontWeight: 600,
     },
     h3: {
-      fontWeight: 600,
       fontSize: '1.75rem',
+      fontWeight: 600,
     },
     h4: {
-      fontWeight: 600,
       fontSize: '1.5rem',
+      fontWeight: 600,
     },
     h5: {
-      fontWeight: 500,
       fontSize: '1.25rem',
+      fontWeight: 600,
     },
     h6: {
-      fontWeight: 500,
       fontSize: '1rem',
+      fontWeight: 600,
     },
     button: {
       fontWeight: 500,
@@ -72,15 +83,15 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
+          textTransform: 'none',
           borderRadius: 8,
-          padding: '8px 16px',
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-          },
         },
-        contained: {
-          boxShadow: 'none',
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
         },
       },
     },

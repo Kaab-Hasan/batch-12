@@ -14,7 +14,7 @@ export const productAPI = {
   // Get all products with optional filters
   getProducts: async (params = {}) => {
     try {
-      const response = await api.get('/api/products', { params });
+      const response = await api.get('/products', { params });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching products';
@@ -24,7 +24,7 @@ export const productAPI = {
   // Get a single product by ID
   getProductById: async (id) => {
     try {
-      const response = await api.get(`/api/products/${id}`);
+      const response = await api.get(`/products/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching product details';
@@ -34,7 +34,7 @@ export const productAPI = {
   // Get featured products
   getFeaturedProducts: async (limit = 8) => {
     try {
-      const response = await api.get(`/api/products/featured`, { params: { limit } });
+      const response = await api.get(`/products/featured`, { params: { limit } });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching featured products';
@@ -44,7 +44,7 @@ export const productAPI = {
   // Get best seller products
   getBestSellerProducts: async (limit = 8) => {
     try {
-      const response = await api.get(`/api/products/bestsellers`, { params: { limit } });
+      const response = await api.get(`/products/bestsellers`, { params: { limit } });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching best seller products';
@@ -54,7 +54,7 @@ export const productAPI = {
   // Get new arrival products
   getNewArrivalProducts: async (limit = 8) => {
     try {
-      const response = await api.get(`/api/products/new-arrivals`, { params: { limit } });
+      const response = await api.get(`/products/new-arrivals`, { params: { limit } });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching new arrival products';
@@ -67,7 +67,7 @@ export const orderAPI = {
   // Create a new order
   createOrder: async (orderData) => {
     try {
-      const response = await api.post('/api/orders', orderData);
+      const response = await api.post('/orders', orderData);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error creating order';
@@ -77,7 +77,7 @@ export const orderAPI = {
   // Get user's orders
   getUserOrders: async () => {
     try {
-      const response = await api.get('/api/orders/user');
+      const response = await api.get('/orders/user');
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching your orders';
@@ -87,7 +87,7 @@ export const orderAPI = {
   // Get a single order by ID
   getOrderById: async (id) => {
     try {
-      const response = await api.get(`/api/orders/${id}`);
+      const response = await api.get(`/orders/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching order details';
@@ -97,7 +97,7 @@ export const orderAPI = {
   // Update order to paid
   updateOrderToPaid: async (id, paymentResult) => {
     try {
-      const response = await api.put(`/api/orders/${id}/pay`, paymentResult);
+      const response = await api.put(`/orders/${id}/pay`, paymentResult);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error updating payment status';
@@ -110,7 +110,7 @@ export const checkoutAPI = {
   // Create payment intent with Stripe
   createPaymentIntent: async (amount, orderId) => {
     try {
-      const response = await api.post('/api/checkout/create-payment-intent', {
+      const response = await api.post('/checkout/create-payment-intent', {
         amount,
         orderId,
       });
@@ -123,7 +123,7 @@ export const checkoutAPI = {
   // Confirm payment success
   confirmPayment: async (paymentIntentId, orderId) => {
     try {
-      const response = await api.post('/api/checkout/confirm-payment', {
+      const response = await api.post('/checkout/confirm-payment', {
         paymentIntentId,
         orderId,
       });
@@ -139,7 +139,7 @@ export const adminAPI = {
   // Get all users (admin only)
   getUsers: async () => {
     try {
-      const response = await api.get('/api/users');
+      const response = await api.get('/users');
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching users';
@@ -149,7 +149,7 @@ export const adminAPI = {
   // Delete a user (admin only)
   deleteUser: async (id) => {
     try {
-      const response = await api.delete(`/api/users/${id}`);
+      const response = await api.delete(`/users/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error deleting user';
@@ -159,7 +159,7 @@ export const adminAPI = {
   // Get all orders (admin only)
   getOrders: async (params = {}) => {
     try {
-      const response = await api.get('/api/orders', { params });
+      const response = await api.get('/orders', { params });
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error fetching orders';
@@ -169,7 +169,7 @@ export const adminAPI = {
   // Update order status (admin only)
   updateOrderStatus: async (id, statusData) => {
     try {
-      const response = await api.put(`/api/orders/${id}/status`, statusData);
+      const response = await api.put(`/orders/${id}/status`, statusData);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error updating order status';
@@ -195,7 +195,7 @@ export const adminAPI = {
         });
       }
       
-      const response = await api.post('/api/products', formData, {
+      const response = await api.post('/products', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -226,7 +226,7 @@ export const adminAPI = {
         });
       }
       
-      const response = await api.put(`/api/products/${id}`, formData, {
+      const response = await api.put(`/products/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -241,7 +241,7 @@ export const adminAPI = {
   // Delete a product (admin only)
   deleteProduct: async (id) => {
     try {
-      const response = await api.delete(`/api/products/${id}`);
+      const response = await api.delete(`/products/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Error deleting product';
@@ -251,10 +251,10 @@ export const adminAPI = {
   // Delete a product image (admin only)
   deleteProductImage: async (productId, imageIndex) => {
     try {
-      const response = await api.delete(`/api/products/${productId}/images/${imageIndex}`);
+      const response = await api.delete(`/products/${productId}/images/${imageIndex}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data?.message || 'Error deleting product image';
+      throw error.response?.data?.message || 'Error deleting image';
     }
   },
 };

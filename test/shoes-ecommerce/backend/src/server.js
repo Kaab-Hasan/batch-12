@@ -15,16 +15,30 @@ import users from '../data/userSeed.js';
 dotenv.config();
 
 const app = express();
-// Use environment variable port or default to 5000
-const PORT = process.env.PORT || 5000;
+// Use environment variable port or default to 8000
+const PORT = process.env.PORT || 8000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', '*'],
-  credentials: true
+  origin: '*',  // Allow all origins temporarily for development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 app.use(express.json({ limit: '50mb' })); // Increase limit for large images
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Additional CORS headers for all responses
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Debug endpoint
 app.get('/api/debug', (req, res) => {

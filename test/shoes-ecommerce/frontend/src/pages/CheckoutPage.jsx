@@ -64,6 +64,7 @@ const CheckoutPage = () => {
   const [orderError, setOrderError] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [saveInfo, setSaveInfo] = useState(true);
+  const [stepSuccess, setStepSuccess] = useState('');
   
   // Calculate order summary
   const itemsPrice = cartItems && cartItems.length > 0
@@ -86,10 +87,21 @@ const CheckoutPage = () => {
   }, [cartItems, user, navigate]);
 
   const handleNext = () => {
+    // Show success message based on current step
+    if (activeStep === 0) {
+      setStepSuccess('Shipping information saved successfully!');
+    } else if (activeStep === 1) {
+      setStepSuccess('Payment method selected successfully!');
+    }
+    
+    // Clear success message after 3 seconds
+    setTimeout(() => setStepSuccess(''), 3000);
+    
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
   const handleBack = () => {
+    setStepSuccess('');
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
@@ -118,68 +130,85 @@ const CheckoutPage = () => {
     try {
       setOrderLoading(true);
       setOrderError('');
+      setStepSuccess('Processing your order...');
       
-      if (USE_MOCK_DATA) {
-        // Simulate API call for mock data mode
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Simulate successful order
-        setOrderSuccess(true);
-        clearCart();
-        
-        // Proceed to confirmation step
-        handleNext();
-        return;
+      // Create order first
+      const orderResponse = await fetch(`${API_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          orderItems: cartItems.map(item => ({
+            product: item._id,
+            name: item.name,
+            quantity: item.quantity,
+            image: item.image,
+            price: item.price,
+            size: item.size
+          })),
+          shippingAddress,
+          paymentMethod,
+          itemsPrice,
+          shippingPrice,
+          taxPrice,
+          totalPrice
+        })
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Failed to create order');
       }
+
+      const orderData = await orderResponse.json();
+      setStepSuccess('Order created successfully! Processing payment...');
+
+      // Process mock payment
+      const paymentResponse = await fetch(`${API_URL}/checkout/create-payment-intent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          amount: totalPrice,
+          orderId: orderData._id
+        })
+      });
+
+      if (!paymentResponse.ok) {
+        throw new Error('Failed to process payment');
+      }
+
+      setStepSuccess('Payment processed successfully! Confirming your order...');
+
+      // Confirm the payment
+      const confirmResponse = await fetch(`${API_URL}/checkout/confirm-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          orderId: orderData._id
+        })
+      });
+
+      if (!confirmResponse.ok) {
+        throw new Error('Failed to confirm payment');
+      }
+
+      // Process successful order
+      setOrderSuccess(true);
+      clearCart();
+      setStepSuccess('Order completed successfully! Thank you for your purchase.');
+      handleNext();
       
-      // Only try the API call if mock data is not enabled
-      try {
-        const response = await fetch(`${API_URL}/api/orders`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user.token}`
-          },
-          body: JSON.stringify({
-            orderItems: cartItems.map(item => ({
-              product: item._id,
-              name: item.name,
-              quantity: item.quantity,
-              image: item.image,
-              price: item.price,
-              size: item.size
-            })),
-            shippingAddress,
-            paymentMethod,
-            itemsPrice,
-            shippingPrice,
-            taxPrice,
-            totalPrice
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error('Server responded with an error');
-        }
-        
-        // Process successful response
-        setOrderSuccess(true);
-        clearCart();
-        handleNext();
-      } catch (apiError) {
-        console.error('API error, falling back to mock data:', apiError);
-        setOrderError('Server unavailable. Using mock data instead.');
-        
-        // Fallback to mock data behavior after a short delay
-        setTimeout(() => {
-          setOrderSuccess(true);
-          clearCart();
-          handleNext();
-        }, 2000);
-      }
     } catch (error) {
-      console.error('Error creating order:', error);
-      setOrderError('Failed to place order. Please try again.');
+      console.error('Error processing order:', error);
+      setOrderError(error.message || 'Failed to place order. Please try again.');
+      setStepSuccess('');
     } finally {
       setOrderLoading(false);
     }
@@ -410,6 +439,12 @@ const CheckoutPage = () => {
         <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
           Checkout
         </Typography>
+        
+        {stepSuccess && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            {stepSuccess}
+          </Alert>
+        )}
         
         {USE_MOCK_DATA && (
           <Alert severity="info" sx={{ mb: 3 }}>

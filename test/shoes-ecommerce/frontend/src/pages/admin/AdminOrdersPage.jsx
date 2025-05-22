@@ -36,9 +36,29 @@ import {
   Delete as DeleteIcon,
   LocalShipping as ShippingIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { AuthContext } from '../../context/AuthContext';
 import config from '../../config';
+
+// Helper function to safely format dates
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    // Try to parse the date string
+    const date = new Date(dateString);
+    
+    // Check if the date is valid
+    if (isValid(date)) {
+      return format(date, 'MMM d, yyyy');
+    }
+    
+    return 'Invalid date';
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
+};
 
 const AdminOrdersPage = () => {
   const { user } = useContext(AuthContext);
@@ -64,19 +84,27 @@ const AdminOrdersPage = () => {
         setLoading(true);
         setError('');
         
-        // In a real application, you would call your API
-        // const response = await fetch(`${config.apiUrl}/api/orders`, {
-        //   headers: {
-        //     Authorization: `Bearer ${user.token}`,
-        //   },
-        // });
+        const response = await fetch(`${config.API_URL}/orders`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
         
-        // const data = await response.json();
-        // if (!response.ok) throw new Error(data.message || 'Failed to fetch orders');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to fetch orders');
         
-        // For demo purposes - mock data
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Ensure we're working with an array
+        const ordersArray = Array.isArray(data) ? data : 
+                           (data.orders ? data.orders : []);
         
+        setOrders(ordersArray);
+        setFilteredOrders(ordersArray);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError(err.message || 'Failed to load orders. Using sample data temporarily.');
+        
+        // Fallback to mock data if API fails
         const mockOrders = Array.from({ length: 25 }, (_, i) => ({
           _id: `order-${i + 1}`,
           user: {
@@ -113,13 +141,12 @@ const AdminOrdersPage = () => {
         setOrders(mockOrders);
         setFilteredOrders(mockOrders);
         setLoading(false);
-      } catch (err) {
-        setError(err.message || 'Something went wrong');
-        setLoading(false);
       }
     };
 
-    fetchOrders();
+    if (user?.token) {
+      fetchOrders();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -187,52 +214,69 @@ const AdminOrdersPage = () => {
       let method = 'PUT';
       let actionName = '';
       
-      // In a real application, you would call your API
       if (actionType === 'markPaid') {
-        endpoint = `${config.API_URL}/api/orders/${selectedOrder._id}/pay`;
+        endpoint = `${config.API_URL}/orders/${selectedOrder._id}/pay`;
         actionName = 'marked as paid';
       } else if (actionType === 'markDelivered') {
-        endpoint = `${config.API_URL}/api/orders/${selectedOrder._id}/deliver`;
+        endpoint = `${config.API_URL}/orders/${selectedOrder._id}/deliver`;
         actionName = 'marked as delivered';
       } else if (actionType === 'delete') {
-        endpoint = `${config.API_URL}/api/orders/${selectedOrder._id}`;
+        endpoint = `${config.API_URL}/orders/${selectedOrder._id}`;
         method = 'DELETE';
         actionName = 'deleted';
       }
       
-      // const response = await fetch(endpoint, {
-      //   method,
-      //   headers: {
-      //     Authorization: `Bearer ${user.token}`,
-      //     'Content-Type': 'application/json'
-      //   }
-      // });
-      
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.message || `Failed to ${actionType} order`);
-      // }
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update order status in state
-      const updatedOrders = orders.map(order => {
-        if (order._id === selectedOrder._id) {
-          if (actionType === 'markPaid') {
-            return { ...order, isPaid: true, paidAt: new Date() };
-          } else if (actionType === 'markDelivered') {
-            return { ...order, isDelivered: true, deliveredAt: new Date() };
-          }
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
         }
-        return order;
       });
       
-      // Remove order if deleted
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to ${actionType} order`);
+      }
+      
+      // Update orders list after successful action
       if (actionType === 'delete') {
         setOrders(orders.filter(order => order._id !== selectedOrder._id));
       } else {
-        setOrders(updatedOrders);
+        try {
+          // For markPaid or markDelivered, fetch the updated order
+          const updatedOrderResponse = await fetch(`${config.API_URL}/orders/${selectedOrder._id}`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`
+            }
+          });
+          
+          if (!updatedOrderResponse.ok) {
+            throw new Error('Failed to get updated order details');
+          }
+          
+          const responseData = await updatedOrderResponse.json();
+          // Make sure we get a valid order object back
+          const updatedOrder = responseData.order || responseData;
+          
+          // Update the order in state
+          setOrders(orders.map(order => 
+            order._id === selectedOrder._id ? updatedOrder : order
+          ));
+        } catch (fetchError) {
+          console.error('Error fetching updated order:', fetchError);
+          // If we can't fetch the updated order, update the local state with what we know
+          setOrders(orders.map(order => {
+            if (order._id === selectedOrder._id) {
+              if (actionType === 'markPaid') {
+                return { ...order, isPaid: true, paidAt: new Date() };
+              } else if (actionType === 'markDelivered') {
+                return { ...order, isDelivered: true, deliveredAt: new Date() };
+              }
+            }
+            return order;
+          }));
+        }
       }
       
       setActionSuccess(`Order successfully ${actionName}`);
@@ -348,7 +392,7 @@ const AdminOrdersPage = () => {
                 displayedOrders.map((order) => (
                   <TableRow key={order._id} hover>
                     <TableCell>{order._id}</TableCell>
-                    <TableCell>{format(new Date(order.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell>{formatDate(order.createdAt)}</TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
                         {order.user.name}
@@ -365,7 +409,7 @@ const AdminOrdersPage = () => {
                             Paid
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {format(new Date(order.paidAt), 'MMM d, yyyy')}
+                            {formatDate(order.paidAt)}
                           </Typography>
                         </Box>
                       ) : (

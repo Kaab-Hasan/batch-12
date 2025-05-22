@@ -84,11 +84,33 @@ const ProductsPage = () => {
         setLoading(true);
         const response = await fetch(`${config.API_URL}/products`);
         const data = await response.json();
+        console.log("Fetched API data:", data);
+    
+        // Ensure we're dealing with an array and handle both response formats
+        const productsArray = Array.isArray(data) ? data : 
+                            Array.isArray(data.products) ? data.products : [];
         
-        // Ensure we're dealing with an array
-        const productsArray = Array.isArray(data.products) ? data.products : [];
-        setProducts(productsArray);
-        setFilteredProducts(productsArray);
+        // Map the products to ensure consistent structure
+        const mappedProducts = productsArray.map(product => ({
+          _id: product._id,
+          name: product.name,
+          price: product.price,
+          images: product.images || ['https://via.placeholder.com/300'],
+          brand: product.brand,
+          category: product.category,
+          rating: product.rating || 0,
+          numReviews: product.numReviews || 0,
+          sizes: product.sizes || [],
+          colors: product.colors || [],
+          description: product.description,
+          isNewArrival: product.isNewArrival || false,
+          isBestSeller: product.isBestSeller || false,
+          discount: product.discount || 0
+        }));
+
+        setProducts(mappedProducts);
+        setFilteredProducts(mappedProducts);
+
       } catch (err) {
         console.error("Error fetching products:", err);
         setError('Failed to load products. Please try again later.');

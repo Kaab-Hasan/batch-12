@@ -90,17 +90,18 @@ const ProductDetailPage = () => {
           return;
         }
 
-        const response = await fetch(`${config.API_URL}/api/products/${id}`);
+        // Fetch product details
+        const response = await fetch(`${config.API_URL}/products/${id}`);
         if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
+          throw new Error('Failed to fetch product details');
         }
         const data = await response.json();
         setProduct(data);
         
         // Fetch related products
-        const relatedResponse = await fetch(`${config.API_URL}/api/products?category=${data.category}&limit=4`);
+        const relatedResponse = await fetch(`${config.API_URL}/products?category=${data.category}&limit=4`);
         if (!relatedResponse.ok) {
-          throw new Error(`Error fetching related products: ${relatedResponse.status}`);
+          throw new Error('Failed to fetch related products');
         }
         const relatedData = await relatedResponse.json();
         setRelatedProducts(relatedData.filter(p => p._id !== data._id).slice(0, 4));

@@ -33,9 +33,29 @@ import {
   Person as PersonIcon,
   SupervisorAccount as AdminIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { AuthContext } from '../../context/AuthContext';
 import config from '../../config';
+
+// Helper function to safely format dates
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    // Try to parse the date string
+    const date = new Date(dateString);
+    
+    // Check if the date is valid
+    if (isValid(date)) {
+      return format(date, 'MMM d, yyyy');
+    }
+    
+    return 'Invalid date';
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
+};
 
 const AdminUsersPage = () => {
   const { user } = useContext(AuthContext);
@@ -65,19 +85,27 @@ const AdminUsersPage = () => {
         setLoading(true);
         setError('');
         
-        // In a real application, you would call your API
-        // const response = await fetch(`${config.apiUrl}/api/users`, {
-        //   headers: {
-        //     Authorization: `Bearer ${user.token}`,
-        //   },
-        // });
+        const response = await fetch(`${config.API_URL}/users`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        });
         
-        // const data = await response.json();
-        // if (!response.ok) throw new Error(data.message || 'Failed to fetch users');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to fetch users');
         
-        // For demo purposes - mock data
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Ensure we're working with an array
+        const usersArray = Array.isArray(data) ? data : 
+                          (data.users ? data.users : []);
         
+        setUsers(usersArray);
+        setFilteredUsers(usersArray);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError(err.message || 'Failed to load users. Using sample data temporarily.');
+        
+        // Fallback to mock data if API fails
         const mockUsers = Array.from({ length: 25 }, (_, i) => ({
           _id: `user-${i + 1}`,
           name: `User ${i + 1}`,
@@ -89,13 +117,12 @@ const AdminUsersPage = () => {
         setUsers(mockUsers);
         setFilteredUsers(mockUsers);
         setLoading(false);
-      } catch (err) {
-        setError(err.message || 'Something went wrong');
-        setLoading(false);
       }
     };
 
-    fetchUsers();
+    if (user?.token) {
+      fetchUsers();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -124,9 +151,9 @@ const AdminUsersPage = () => {
   const handleEditClick = (user) => {
     setSelectedUser(user);
     setEditFormData({
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin
+      name: user.name || '',
+      email: user.email || '',
+      isAdmin: Boolean(user.isAdmin)
     });
     setEditDialogOpen(true);
     setActionError('');
@@ -154,28 +181,27 @@ const AdminUsersPage = () => {
       setActionError('');
       setActionSuccess('');
       
-      // In a real application, you would call your API
-      // const response = await fetch(`${config.apiUrl}/api/users/${selectedUser._id}`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${user.token}`,
-      //   },
-      //   body: JSON.stringify(editFormData),
-      // });
+      const response = await fetch(`${config.API_URL}/users/${selectedUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify(editFormData),
+      });
       
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.message || 'Failed to update user');
-      // }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update user');
+      }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const responseData = await response.json();
+      // Make sure we get a valid user object back
+      const updatedUser = responseData.user || responseData;
       
-      // Update user in state
       const updatedUsers = users.map(u => 
         u._id === selectedUser._id 
-          ? { ...u, ...editFormData }
+          ? updatedUser
           : u
       );
       
@@ -203,25 +229,21 @@ const AdminUsersPage = () => {
       setActionError('');
       setActionSuccess('');
       
-      // In a real application, you would call your API
-      // const response = await fetch(`${config.apiUrl}/api/users/${selectedUser._id}`, {
-      //   method: 'DELETE',
-      //   headers: {
-      //     Authorization: `Bearer ${user.token}`,
-      //   },
-      // });
+      const response = await fetch(`${config.API_URL}/users/${selectedUser._id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
       
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.message || 'Failed to delete user');
-      // }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete user');
+      }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updatedUsers = users.filter(u => u._id !== selectedUser._id);
       
-      // Remove user from state
-      setUsers(users.filter(u => u._id !== selectedUser._id));
-      
+      setUsers(updatedUsers);
       setActionSuccess(`User ${selectedUser.name} deleted successfully`);
       setActionLoading(false);
       setDeleteDialogOpen(false);
@@ -316,7 +338,7 @@ const AdminUsersPage = () => {
                     <TableCell>{user._id}</TableCell>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell>{format(new Date(user.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>
                       {user.isAdmin ? (
                         <Chip 

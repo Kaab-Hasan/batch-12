@@ -49,15 +49,15 @@ const AdminProductEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const isNewProduct = id === 'new';
+  const isAddMode = !id;
   
-  const [loading, setLoading] = useState(!isNewProduct);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [uploadingImages, setUploadingImages] = useState(false);
   
-  const [productData, setProductData] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     brand: '',
     category: '',
@@ -75,74 +75,88 @@ const AdminProductEditPage = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
 
   useEffect(() => {
-    const fetchProductDetails = async () => {
-      if (isNewProduct) return;
-      
-      try {
-        setLoading(true);
-        setError('');
-        
-        const response = await fetch(`${config.API_URL}/api/products/${id}`, {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-        
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to fetch product details');
-        
-        setProductData(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message || 'Something went wrong');
-        setLoading(false);
-      }
-    };
-
-    if (user && user.token) {
-    fetchProductDetails();
+    if (!isAddMode) {
+      fetchProduct();
     }
-  }, [id, isNewProduct, user]);
+  }, [id]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${config.API_URL}/products/${id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch product');
+      }
+
+      const data = await response.json();
+      
+      // Map the data to the form structure
+      setFormData({
+        name: data.name || '',
+        brand: data.brand || '',
+        category: data.category || '',
+        description: data.description || '',
+        price: data.price || '',
+        images: data.images || [],
+        sizes: data.sizes || [],
+        colors: data.colors || [],
+        featured: data.featured || false,
+        isBestSeller: data.isBestSeller || false,
+        isNewArrival: data.isNewArrival || false
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to fetch product details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validateForm = () => {
     const errors = {};
     let isValid = true;
 
-    if (!productData.name.trim()) {
+    if (!formData.name.trim()) {
       errors.name = 'Name is required';
       isValid = false;
     }
 
-    if (!productData.brand) {
+    if (!formData.brand) {
       errors.brand = 'Brand is required';
       isValid = false;
     }
 
-    if (!productData.category) {
+    if (!formData.category) {
       errors.category = 'Category is required';
       isValid = false;
     }
 
-    if (!productData.description.trim()) {
+    if (!formData.description.trim()) {
       errors.description = 'Description is required';
       isValid = false;
     }
 
-    if (!productData.price) {
+    if (!formData.price) {
       errors.price = 'Price is required';
       isValid = false;
-    } else if (isNaN(productData.price) || Number(productData.price) <= 0) {
+    } else if (isNaN(formData.price) || Number(formData.price) <= 0) {
       errors.price = 'Price must be a positive number';
       isValid = false;
     }
 
-    if ((isNewProduct && productData.images.length === 0 && selectedFiles.length === 0) || 
-        (!isNewProduct && productData.images.length === 0)) {
+    if ((isAddMode && formData.images.length === 0 && selectedFiles.length === 0) || 
+        (!isAddMode && formData.images.length === 0)) {
       errors.images = 'At least one image is required';
       isValid = false;
     }
 
-    if (productData.sizes.length === 0) {
+    if (formData.sizes.length === 0) {
       errors.sizes = 'At least one size must be selected';
       isValid = false;
     }
@@ -159,55 +173,55 @@ const AdminProductEditPage = () => {
       if (!/^[0-9]*\.?[0-9]*$/.test(value)) return;
     }
     
-    setProductData({
-      ...productData,
+    setFormData({
+      ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
   };
 
   const handleSizeSelect = (size) => {
     // Check if this size is already in the sizes array
-    const sizeExists = productData.sizes.find(s => s.size === size);
+    const sizeExists = formData.sizes.find(s => s.size === size);
     
     if (sizeExists) {
       // If size exists, remove it
-      setProductData({
-        ...productData,
-        sizes: productData.sizes.filter(s => s.size !== size)
+      setFormData({
+        ...formData,
+        sizes: formData.sizes.filter(s => s.size !== size)
       });
     } else {
       // Otherwise, add it with default stock of 0
-      setProductData({
-        ...productData,
-        sizes: [...productData.sizes, { size, stock: 0 }]
+      setFormData({
+        ...formData,
+        sizes: [...formData.sizes, { size, stock: 0 }]
       });
     }
   };
 
   const handleSizeStockChange = (size, stock) => {
-    const newSizes = productData.sizes.map(s => {
+    const newSizes = formData.sizes.map(s => {
       if (s.size === size) {
         return { ...s, stock: Number(stock) };
       }
       return s;
     });
     
-    setProductData({
-      ...productData,
+    setFormData({
+      ...formData,
       sizes: newSizes
     });
   };
 
   const handleColorToggle = (color) => {
-    if (productData.colors.includes(color)) {
-      setProductData({
-        ...productData,
-        colors: productData.colors.filter(c => c !== color)
+    if (formData.colors.includes(color)) {
+      setFormData({
+        ...formData,
+        colors: formData.colors.filter(c => c !== color)
       });
     } else {
-      setProductData({
-        ...productData,
-        colors: [...productData.colors, color]
+      setFormData({
+        ...formData,
+        colors: [...formData.colors, color]
       });
     }
   };
@@ -226,9 +240,9 @@ const AdminProductEditPage = () => {
   };
 
   const removeExistingImage = async (index) => {
-    if (!isNewProduct) {
+    if (!isAddMode) {
       try {
-        const response = await fetch(`${config.API_URL}/api/products/${id}/images/${index}`, {
+        const response = await fetch(`${config.API_URL}/products/${id}/images/${index}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -241,10 +255,10 @@ const AdminProductEditPage = () => {
         }
         
         // Update the state after successful deletion
-        const updatedImages = [...productData.images];
+        const updatedImages = [...formData.images];
         updatedImages.splice(index, 1);
-        setProductData({
-          ...productData,
+        setFormData({
+          ...formData,
           images: updatedImages
         });
       } catch (err) {
@@ -252,10 +266,10 @@ const AdminProductEditPage = () => {
       }
     } else {
       // For new products, simply update the state
-      const updatedImages = [...productData.images];
+      const updatedImages = [...formData.images];
       updatedImages.splice(index, 1);
-      setProductData({
-        ...productData,
+      setFormData({
+        ...formData,
         images: updatedImages
       });
     }
@@ -272,35 +286,34 @@ const AdminProductEditPage = () => {
       setSuccess('');
       
       // Create FormData object to handle file uploads
-      const formData = new FormData();
-      formData.append('name', productData.name);
-      formData.append('brand', productData.brand);
-      formData.append('category', productData.category);
-      formData.append('description', productData.description);
-      formData.append('price', productData.price);
-      formData.append('sizes', JSON.stringify(productData.sizes));
-      formData.append('colors', JSON.stringify(productData.colors));
-      formData.append('featured', productData.featured);
-      formData.append('isBestSeller', productData.isBestSeller);
-      formData.append('isNewArrival', productData.isNewArrival);
+      const formDataObj = new FormData();
+      formDataObj.append('name', formData.name);
+      formDataObj.append('brand', formData.brand);
+      formDataObj.append('category', formData.category);
+      formDataObj.append('description', formData.description);
+      formDataObj.append('price', formData.price);
+      formDataObj.append('sizes', JSON.stringify(formData.sizes));
+      formDataObj.append('colors', JSON.stringify(formData.colors));
+      formDataObj.append('featured', formData.featured);
+      formDataObj.append('isBestSeller', formData.isBestSeller);
+      formDataObj.append('isNewArrival', formData.isNewArrival);
       
       // Append image files if any
       selectedFiles.forEach(file => {
-        formData.append('images', file);
+        formDataObj.append('images', file);
       });
       
       // Set the appropriate method and URL for create or update
-      const method = isNewProduct ? 'POST' : 'PUT';
-      const url = isNewProduct 
-        ? `${config.API_URL}/api/products`
-        : `${config.API_URL}/api/products/${id}`;
+      const apiUrl = isAddMode
+        ? `${config.API_URL}/products`
+        : `${config.API_URL}/products/${id}`;
       
-      const response = await fetch(url, {
-        method,
+      const response = await fetch(apiUrl, {
+        method: isAddMode ? 'POST' : 'PUT',
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
-        body: formData
+        body: formDataObj
       });
       
       const result = await response.json();
@@ -309,7 +322,7 @@ const AdminProductEditPage = () => {
         throw new Error(result.message || 'Failed to save product');
       }
       
-      setSuccess(`Product ${isNewProduct ? 'created' : 'updated'} successfully!`);
+      setSuccess(`Product ${isAddMode ? 'created' : 'updated'} successfully!`);
       
       // Redirect to products list after a short delay
       setTimeout(() => {
@@ -327,7 +340,7 @@ const AdminProductEditPage = () => {
     navigate('/admin/products');
   };
 
-  if (loading) {
+  if (loading && !isAddMode) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
@@ -349,14 +362,14 @@ const AdminProductEditPage = () => {
           Products
         </Link>
         <Typography color="text.primary">
-              {isNewProduct ? 'Add New Product' : 'Edit Product'}
+              {isAddMode ? 'Add Product' : 'Edit Product'}
         </Typography>
       </Breadcrumbs>
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Typography variant="h4" component="h1">
-            {isNewProduct ? 'Add New Product' : 'Edit Product'}
+            {isAddMode ? 'Add Product' : 'Edit Product'}
           </Typography>
           
         <Button
@@ -395,7 +408,7 @@ const AdminProductEditPage = () => {
                 fullWidth
                 label="Product Name"
                 name="name"
-                value={productData.name}
+                value={formData.name}
                 onChange={handleChange}
                 error={!!formErrors.name}
                 helperText={formErrors.name}
@@ -408,7 +421,7 @@ const AdminProductEditPage = () => {
                 fullWidth
                 label="Price"
                 name="price"
-                value={productData.price}
+                value={formData.price}
                 onChange={handleChange}
                 type="text"
                 error={!!formErrors.price}
@@ -425,7 +438,7 @@ const AdminProductEditPage = () => {
                 <InputLabel>Brand</InputLabel>
                 <Select
                   name="brand"
-                  value={productData.brand}
+                  value={formData.brand}
                   onChange={handleChange}
                   label="Brand"
                 >
@@ -444,7 +457,7 @@ const AdminProductEditPage = () => {
                 <InputLabel>Category</InputLabel>
                 <Select
                   name="category"
-                  value={productData.category}
+                  value={formData.category}
                   onChange={handleChange}
                   label="Category"
                 >
@@ -463,7 +476,7 @@ const AdminProductEditPage = () => {
                 fullWidth
                 label="Description"
                 name="description"
-                value={productData.description}
+                value={formData.description}
                 onChange={handleChange}
                 multiline
                 rows={4}
@@ -488,7 +501,7 @@ const AdminProductEditPage = () => {
                 </Typography>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
                   {availableSizes.map((size) => {
-                    const isSelected = productData.sizes.some(s => s.size === size);
+                    const isSelected = formData.sizes.some(s => s.size === size);
                     return (
                       <Chip
                         key={size}
@@ -506,13 +519,13 @@ const AdminProductEditPage = () => {
             </Grid>
             
             {/* Stock inputs for selected sizes */}
-            {productData.sizes.length > 0 && (
+            {formData.sizes.length > 0 && (
               <Grid item xs={12}>
                 <Typography variant="subtitle1" sx={{ mb: 2 }}>
                   Enter Stock Quantity for Each Size
                 </Typography>
                 <Grid container spacing={2}>
-                  {productData.sizes.map((sizeObj) => (
+                  {formData.sizes.map((sizeObj) => (
                     <Grid item xs={12} sm={6} md={4} lg={3} key={sizeObj.size}>
                       <TextField
                         fullWidth
@@ -543,8 +556,8 @@ const AdminProductEditPage = () => {
                     key={color}
                     label={color}
                     onClick={() => handleColorToggle(color)}
-                    color={productData.colors.includes(color) ? "primary" : "default"}
-                    variant={productData.colors.includes(color) ? "filled" : "outlined"}
+                    color={formData.colors.includes(color) ? "primary" : "default"}
+                    variant={formData.colors.includes(color) ? "filled" : "outlined"}
                     sx={{ mb: 1 }}
                   />
                 ))}
@@ -585,13 +598,13 @@ const AdminProductEditPage = () => {
             </Grid>
             
             {/* Preview of existing images */}
-            {productData.images && productData.images.length > 0 && (
+            {formData.images && formData.images.length > 0 && (
               <Grid item xs={12}>
                 <Typography variant="subtitle1" sx={{ mb: 2 }}>
                   Existing Images
                 </Typography>
                 <Grid container spacing={2}>
-                  {productData.images.map((image, index) => (
+                  {formData.images.map((image, index) => (
                     <Grid item xs={6} sm={4} md={3} key={index}>
                       <Card>
                         <CardMedia
@@ -664,7 +677,7 @@ const AdminProductEditPage = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={productData.featured}
+                    checked={formData.featured}
                     onChange={handleChange}
                     name="featured"
                   />
@@ -677,7 +690,7 @@ const AdminProductEditPage = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={productData.isBestSeller}
+                    checked={formData.isBestSeller}
                     onChange={handleChange}
                     name="isBestSeller"
                   />
@@ -690,7 +703,7 @@ const AdminProductEditPage = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={productData.isNewArrival}
+                    checked={formData.isNewArrival}
                     onChange={handleChange}
                     name="isNewArrival"
                   />

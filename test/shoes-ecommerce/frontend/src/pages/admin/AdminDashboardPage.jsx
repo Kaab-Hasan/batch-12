@@ -82,29 +82,24 @@ function AdminDashboardPage() {
         setLoading(true);
         setError(null);
 
-        if (USE_MOCK_DATA) {
-          // Use mock data for development/demo
-          setStats(mockStats);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch from API in production
-        const response = await fetch(`${API_URL}/api/admin/dashboard`, {
+        // Fetch from API
+        const response = await fetch(`${API_URL}/dashboard/stats`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${user.token}`,
+            'Content-Type': 'application/json'
           }
         });
 
         if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Error: ${response.status}`);
         }
 
         const data = await response.json();
         setStats(data);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError('Unable to load dashboard data. Using sample data instead.');
+        setError('Unable to load dashboard data. Using sample data temporarily.');
         setStats(mockStats); // Fallback to mock data
       } finally {
         setLoading(false);
@@ -112,7 +107,7 @@ function AdminDashboardPage() {
     };
 
     fetchDashboardStats();
-  }, []);
+  }, [user.token]);
 
   if (loading) {
     return (
@@ -242,8 +237,8 @@ function AdminDashboardPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {stats?.recentOrders?.map((order) => (
-                    <TableRow key={order.id} hover>
+                  {stats?.recentOrders?.map((order, index) => (
+                    <TableRow key={`order-${order.id || index}`} hover>
                       <TableCell>#{order.id}</TableCell>
                       <TableCell>{order.customer}</TableCell>
                       <TableCell>{order.date}</TableCell>
@@ -287,25 +282,19 @@ function AdminDashboardPage() {
               Quick Actions
             </Typography>
             <List>
-              <ListItem button component={RouterLink} to="/admin/products/new">
-                <ListItemIcon>
-                  <Add />
-                </ListItemIcon>
-                <ListItemText primary="Add New Product" />
-              </ListItem>
-              <ListItem button component={RouterLink} to="/admin/orders">
+              <ListItem key="manage-orders" button component={RouterLink} to="/admin/orders">
                 <ListItemIcon>
                   <ShoppingCart />
                 </ListItemIcon>
                 <ListItemText primary="Manage Orders" />
               </ListItem>
-              <ListItem button component={RouterLink} to="/admin/users">
+              <ListItem key="manage-users" button component={RouterLink} to="/admin/users">
                 <ListItemIcon>
                   <Person />
                 </ListItemIcon>
                 <ListItemText primary="Manage Users" />
               </ListItem>
-              <ListItem button component={RouterLink} to="/admin/products">
+              <ListItem key="manage-inventory" button component={RouterLink} to="/admin/products">
                 <ListItemIcon>
                   <Inventory />
                 </ListItemIcon>
@@ -326,7 +315,10 @@ function AdminDashboardPage() {
             </Typography>
             <List>
               {stats?.popularProducts?.map((product) => (
-                <ListItem key={product.id} sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <ListItem 
+                  key={`popular-product-${product.id || product.name}`} 
+                  sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}
+                >
                   <ListItemText 
                     primary={product.name} 
                     secondary={`Stock: ${product.stock} | Sold: ${product.sold}`} 

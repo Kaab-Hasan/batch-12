@@ -88,48 +88,39 @@ const HomePage = () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // If USE_MOCK_DATA is true, use mock data immediately without API call
-        // if (USE_MOCK_DATA) {
-        //   setFeaturedProducts(MOCK_PRODUCTS);
-        //   setNewArrivals(MOCK_PRODUCTS.filter(p => p.isNewArrival));
-        //   setBestSellers(MOCK_PRODUCTS.filter(p => p.isBestSeller));
-        //   setLoading(false);
-        //   return;
-        // }
 
-        // Otherwise try to fetch from API
         // Fetch featured products
-        // const featuredResponse = await fetch(`${API_URL}/api/products/featured`);
-        // if (!featuredResponse.ok) {
-        //   throw new Error('Failed to fetch featured products');
-        // }
-        // const featured = await featuredResponse.json();
-        // setFeaturedProducts(featured);
+        const featuredResponse = await fetch(`${API_URL}/products/featured`);
+        if (!featuredResponse.ok) {
+          throw new Error('Failed to fetch featured products');
+        }
+        const featured = await featuredResponse.json();
+        setFeaturedProducts(featured);
 
         // Fetch new arrivals
-        // const newArrivalsResponse = await fetch(`${API_URL}/api/products/new`);
-        // if (!newArrivalsResponse.ok) {
-        //   throw new Error('Failed to fetch new arrivals');
-        // }
-        // const newArrivalsData = await newArrivalsResponse.json();
-        // setNewArrivals(newArrivalsData);
+        const newArrivalsResponse = await fetch(`${API_URL}/products/new-arrivals`);
+        if (!newArrivalsResponse.ok) {
+          throw new Error('Failed to fetch new arrivals');
+        }
+        const newArrivalsData = await newArrivalsResponse.json();
+        setNewArrivals(newArrivalsData);
 
         // Fetch best sellers
-      //   const bestSellersResponse = await fetch(`${API_URL}/api/products/bestsellers`);
-      //   if (!bestSellersResponse.ok) {
-      //     throw new Error('Failed to fetch best sellers');
-      //   }
-      //   const bestSellersData = await bestSellersResponse.json();
-      //   setBestSellers(bestSellersData);
-      // } catch (err) {
-      //   console.error('Error fetching product data:', err);
-      //   setError('Using sample product data until the API is available.');
+        const bestSellersResponse = await fetch(`${API_URL}/products/bestsellers`);
+        if (!bestSellersResponse.ok) {
+          throw new Error('Failed to fetch best sellers');
+        }
+        const bestSellersData = await bestSellersResponse.json();
+        setBestSellers(bestSellersData);
+
+      } catch (err) {
+        console.error('Error fetching product data:', err);
+        setError('Failed to load products. Using sample data temporarily.');
         
         // Use mock data when API fails
-        // setFeaturedProducts(MOCK_PRODUCTS);
-        // setNewArrivals(MOCK_PRODUCTS.filter(p => p.isNewArrival));
-        // setBestSellers(MOCK_PRODUCTS.filter(p => p.isBestSeller));
+        setFeaturedProducts(MOCK_PRODUCTS);
+        setNewArrivals(MOCK_PRODUCTS.filter(p => p.isNewArrival));
+        setBestSellers(MOCK_PRODUCTS.filter(p => p.isBestSeller));
       } finally {
         setLoading(false);
       }
@@ -215,7 +206,7 @@ const HomePage = () => {
 
           <Grid container spacing={3}>
             {['Men', 'Women', 'Kids', 'Sport'].map((category) => (
-              <Grid item xs={6} md={3} key={category}>
+              <Grid item key={`category-${category.toLowerCase()}`} xs={12} sm={6} md={3}>
                 <Paper
                   component={RouterLink}
                   to={`/products?category=${category.toLowerCase()}`}
@@ -234,12 +225,25 @@ const HomePage = () => {
                       transform: 'translateY(-5px)',
                       boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
                     },
+                    background: `linear-gradient(135deg, ${theme.palette.primary.light}, ${theme.palette.primary.main})`,
+                    color: 'white',
                   }}
                 >
-                  <Typography variant="h5" component="h3" gutterBottom>
+                  <Typography 
+                    variant="h5" 
+                    component="h3" 
+                    gutterBottom 
+                    sx={{ fontWeight: 600 }}
+                  >
                     {category}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: 'rgba(255,255,255,0.8)', 
+                      fontWeight: 300 
+                    }}
+                  >
                     Explore {category.toLowerCase()} collection
                   </Typography>
                 </Paper>

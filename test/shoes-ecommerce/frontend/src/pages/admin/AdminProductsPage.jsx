@@ -57,25 +57,31 @@ const AdminProductsPage = () => {
         setLoading(true);
         setError('');
         
-        const response = await fetch(`${config.API_URL}/api/products`, {
+        const response = await fetch(`${config.API_URL}/products`, {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${user?.token}`,
           },
         });
         
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to fetch products');
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Failed to fetch products');
+        }
         
-        setProducts(data.products);
-        setFilteredProducts(data.products);
+        const data = await response.json();
+        setProducts(Array.isArray(data.products) ? data.products : []);
+        setFilteredProducts(Array.isArray(data.products) ? data.products : []);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching products:', err);
         setError(err.message || 'Something went wrong');
+        setProducts([]);
+        setFilteredProducts([]);
         setLoading(false);
       }
     };
 
-    if (user && user.token) {
+    if (user?.token) {
       fetchProducts();
     }
   }, [user]);
@@ -124,7 +130,7 @@ const AdminProductsPage = () => {
       setDeleteLoading(true);
       setDeleteError('');
       
-      const response = await fetch(`${config.API_URL}/api/products/${productToDelete._id}`, {
+      const response = await fetch(`${config.API_URL}/products/${productToDelete._id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -182,11 +188,13 @@ const AdminProductsPage = () => {
         
         <Button
           variant="contained"
+          color="primary"
           startIcon={<AddIcon />}
           component={RouterLink}
           to="/admin/product/new"
+          sx={{ fontWeight: 500 }}
         >
-          Add Product
+          Add New Product
         </Button>
       </Box>
       
