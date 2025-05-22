@@ -24,6 +24,7 @@ import AdminProductsPage from '../pages/admin/AdminProductsPage';
 import AdminProductEditPage from '../pages/admin/AdminProductEditPage';
 import AdminOrdersPage from '../pages/admin/AdminOrdersPage';
 import AdminUsersPage from '../pages/admin/AdminUsersPage';
+import AdminDashboardDebug from '../pages/admin/AdminDashboardDebug';
 
 // Routing Guards
 import ProtectedRoute from '../components/routing/ProtectedRoute';
@@ -91,9 +92,19 @@ const AppRoutes = () => {
           <AdminOrdersPage />
         </AdminRoute>
       } />
+      <Route path="/admin/order/:id" element={
+        <AdminRoute>
+          <AdminOrdersPage />
+        </AdminRoute>
+      } />
       <Route path="/admin/users" element={
         <AdminRoute>
           <AdminUsersPage />
+        </AdminRoute>
+      } />
+      <Route path="/admin/debug" element={
+        <AdminRoute>
+          <AdminDashboardDebug />
         </AdminRoute>
       } />
     </Routes>

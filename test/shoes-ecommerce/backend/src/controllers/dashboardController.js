@@ -16,9 +16,9 @@ export const getDashboardStats = async (req, res) => {
     // Get total orders count
     const orderCount = await Order.countDocuments();
     
-    // Get total revenue (sum of all orders' totalPrice)
+    // Get total revenue (sum of all paid orders' totalPrice)
     const revenue = await Order.aggregate([
-      { $match: { status: { $ne: 'cancelled' } } },
+      { $match: { status: { $in: ['processing', 'shipped', 'delivered'] } } },
       { $group: { _id: null, total: { $sum: '$totalPrice' } } }
     ]);
     
@@ -26,7 +26,17 @@ export const getDashboardStats = async (req, res) => {
     const recentOrders = await Order.find()
       .populate('user', 'name email')
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(5)
+      .lean();
+    
+    // Convert to a more frontend-friendly format
+    const formattedRecentOrders = recentOrders.map(order => ({
+      id: order._id,
+      customer: order.user ? order.user.name : 'Guest',
+      date: order.createdAt,
+      total: order.totalPrice,
+      status: order.status
+    }));
     
     // Get orders by status
     const ordersByStatus = await Order.aggregate([
@@ -39,14 +49,29 @@ export const getDashboardStats = async (req, res) => {
       formattedOrdersByStatus[item._id] = item.count;
     });
     
+    // Get popular products (based on orders)
+    const popularProducts = await Order.aggregate([
+      { $unwind: '$orderItems' },
+      { $group: {
+          _id: '$orderItems.product',
+          name: { $first: '$orderItems.name' },
+          sold: { $sum: '$orderItems.quantity' },
+          price: { $first: '$orderItems.price' }
+        }
+      },
+      { $sort: { sold: -1 } },
+      { $limit: 5 }
+    ]);
+    
     // Return dashboard data
     res.json({
-      userCount,
-      productCount,
-      orderCount,
-      revenue: revenue.length > 0 ? revenue[0].total : 0,
-      recentOrders,
-      ordersByStatus: formattedOrdersByStatus
+      totalCustomers: userCount,
+      totalProducts: productCount,
+      totalOrders: orderCount,
+      totalSales: revenue.length > 0 ? revenue[0].total : 0,
+      recentOrders: formattedRecentOrders,
+      ordersByStatus: formattedOrdersByStatus,
+      popularProducts: popularProducts
     });
   } catch (error) {
     console.error('Dashboard Stats Error:', error);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -27,14 +27,17 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Grid,
+  Divider
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Visibility as VisibilityIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  LocalShipping as ShippingIcon
+  LocalShipping as ShippingIcon,
+  ViewList
 } from '@mui/icons-material';
 import { format, isValid, parseISO } from 'date-fns';
 import { AuthContext } from '../../context/AuthContext';
@@ -62,7 +65,9 @@ const formatDate = (dateString) => {
 
 const AdminOrdersPage = () => {
   const { user } = useContext(AuthContext);
+  const { id: orderId } = useParams(); // Get order ID from URL params
   const [orders, setOrders] = useState([]);
+  const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,75 +84,102 @@ const AdminOrdersPage = () => {
   const ordersPerPage = 10;
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        const response = await fetch(`${config.API_URL}/orders`, {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-        
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to fetch orders');
-        
-        // Ensure we're working with an array
-        const ordersArray = Array.isArray(data) ? data : 
-                           (data.orders ? data.orders : []);
-        
-        setOrders(ordersArray);
-        setFilteredOrders(ordersArray);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError(err.message || 'Failed to load orders. Using sample data temporarily.');
-        
-        // Fallback to mock data if API fails
-        const mockOrders = Array.from({ length: 25 }, (_, i) => ({
-          _id: `order-${i + 1}`,
-          user: {
-            _id: `user-${Math.floor(Math.random() * 20) + 1}`,
-            name: `Customer ${Math.floor(Math.random() * 20) + 1}`,
-            email: `customer${Math.floor(Math.random() * 20) + 1}@example.com`
-          },
-          orderItems: Array.from(
-            { length: Math.floor(Math.random() * 4) + 1 }, 
-            (_, j) => ({
-              _id: `item-${j}`,
-              name: `Nike Air Max ${j + 1}`,
-              qty: Math.floor(Math.random() * 2) + 1,
-              image: 'https://via.placeholder.com/50',
-              price: Math.floor(Math.random() * 50) + 70,
-              product: `product-${j}`
-            })
-          ),
-          shippingAddress: {
-            address: '123 Example St',
-            city: 'New York',
-            postalCode: '10001',
-            country: 'USA'
-          },
-          paymentMethod: Math.random() > 0.5 ? 'Credit Card' : 'PayPal',
-          totalPrice: Math.floor(Math.random() * 300) + 50,
-          isPaid: Math.random() > 0.3,
-          paidAt: Math.random() > 0.3 ? new Date(Date.now() - Math.floor(Math.random() * 5) * 24 * 60 * 60 * 1000) : null,
-          isDelivered: Math.random() > 0.6,
-          deliveredAt: Math.random() > 0.6 ? new Date(Date.now() - Math.floor(Math.random() * 3) * 24 * 60 * 60 * 1000) : null,
-          createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
-        }));
-        
-        setOrders(mockOrders);
-        setFilteredOrders(mockOrders);
-        setLoading(false);
-      }
-    };
+    // If orderId is provided, fetch specific order details
+    if (orderId) {
+      const fetchOrderDetails = async () => {
+        try {
+          setLoading(true);
+          setError('');
+          
+          const response = await fetch(`${config.API_URL}/orders/${orderId}`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          });
+          
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Failed to fetch order details');
+          
+          setOrderDetails(data);
+          setLoading(false);
+        } catch (err) {
+          console.error('Error fetching order details:', err);
+          setError(err.message || 'Failed to load order details');
+          setLoading(false);
+        }
+      };
 
-    if (user?.token) {
+      fetchOrderDetails();
+    } else {
+      // Fetch all orders if no orderId
+      const fetchOrders = async () => {
+        try {
+          setLoading(true);
+          setError('');
+          
+          const response = await fetch(`${config.API_URL}/orders`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          });
+          
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Failed to fetch orders');
+          
+          // Ensure we're working with an array
+          const ordersArray = Array.isArray(data) ? data : 
+                             (data.orders ? data.orders : []);
+          
+          setOrders(ordersArray);
+          setFilteredOrders(ordersArray);
+          setLoading(false);
+        } catch (err) {
+          console.error('Error fetching orders:', err);
+          setError(err.message || 'Failed to load orders. Using sample data temporarily.');
+          
+          // Fallback to mock data if API fails
+          const mockOrders = Array.from({ length: 25 }, (_, i) => ({
+            _id: `order-${i + 1}`,
+            user: {
+              _id: `user-${Math.floor(Math.random() * 20) + 1}`,
+              name: `Customer ${Math.floor(Math.random() * 20) + 1}`,
+              email: `customer${Math.floor(Math.random() * 20) + 1}@example.com`
+            },
+            orderItems: Array.from(
+              { length: Math.floor(Math.random() * 4) + 1 }, 
+              (_, j) => ({
+                _id: `item-${j}`,
+                name: `Nike Air Max ${j + 1}`,
+                qty: Math.floor(Math.random() * 2) + 1,
+                image: 'https://via.placeholder.com/50',
+                price: Math.floor(Math.random() * 50) + 70,
+                product: `product-${j}`
+              })
+            ),
+            shippingAddress: {
+              address: '123 Example St',
+              city: 'New York',
+              postalCode: '10001',
+              country: 'USA'
+            },
+            paymentMethod: Math.random() > 0.5 ? 'Credit Card' : 'PayPal',
+            totalPrice: Math.floor(Math.random() * 300) + 50,
+            isPaid: Math.random() > 0.3,
+            paidAt: Math.random() > 0.3 ? new Date(Date.now() - Math.floor(Math.random() * 5) * 24 * 60 * 60 * 1000) : null,
+            isDelivered: Math.random() > 0.6,
+            deliveredAt: Math.random() > 0.6 ? new Date(Date.now() - Math.floor(Math.random() * 3) * 24 * 60 * 60 * 1000) : null,
+            createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
+          }));
+          
+          setOrders(mockOrders);
+          setFilteredOrders(mockOrders);
+          setLoading(false);
+        }
+      };
+
       fetchOrders();
     }
-  }, [user]);
+  }, [user, orderId]);
 
   useEffect(() => {
     let result = [...orders];
@@ -213,25 +245,31 @@ const AdminOrdersPage = () => {
       let endpoint = '';
       let method = 'PUT';
       let actionName = '';
+      let requestBody = undefined;
       
       if (actionType === 'markPaid') {
-        endpoint = `${config.API_URL}/orders/${selectedOrder._id}/pay`;
+        endpoint = `${config.API_URL}/orders/${selectedOrder._id}/status`;
         actionName = 'marked as paid';
+        requestBody = { status: 'processing' };
       } else if (actionType === 'markDelivered') {
-        endpoint = `${config.API_URL}/orders/${selectedOrder._id}/deliver`;
+        endpoint = `${config.API_URL}/orders/${selectedOrder._id}/status`;
         actionName = 'marked as delivered';
+        requestBody = { status: 'delivered' };
       } else if (actionType === 'delete') {
         endpoint = `${config.API_URL}/orders/${selectedOrder._id}`;
         method = 'DELETE';
         actionName = 'deleted';
       }
       
+      console.log(`Sending request to ${endpoint} with method ${method} and body:`, requestBody);
+      
       const response = await fetch(endpoint, {
         method,
         headers: {
           Authorization: `Bearer ${user.token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: requestBody ? JSON.stringify(requestBody) : undefined
       });
       
       if (!response.ok) {
@@ -239,43 +277,25 @@ const AdminOrdersPage = () => {
         throw new Error(errorData.message || `Failed to ${actionType} order`);
       }
       
+      // For non-delete actions, get the updated order data
+      let updatedOrder;
+      if (actionType !== 'delete') {
+        updatedOrder = await response.json();
+        console.log('Received updated order:', updatedOrder);
+      }
+      
       // Update orders list after successful action
       if (actionType === 'delete') {
         setOrders(orders.filter(order => order._id !== selectedOrder._id));
       } else {
-        try {
-          // For markPaid or markDelivered, fetch the updated order
-          const updatedOrderResponse = await fetch(`${config.API_URL}/orders/${selectedOrder._id}`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`
-            }
-          });
-          
-          if (!updatedOrderResponse.ok) {
-            throw new Error('Failed to get updated order details');
-          }
-          
-          const responseData = await updatedOrderResponse.json();
-          // Make sure we get a valid order object back
-          const updatedOrder = responseData.order || responseData;
-          
-          // Update the order in state
-          setOrders(orders.map(order => 
-            order._id === selectedOrder._id ? updatedOrder : order
-          ));
-        } catch (fetchError) {
-          console.error('Error fetching updated order:', fetchError);
-          // If we can't fetch the updated order, update the local state with what we know
-          setOrders(orders.map(order => {
-            if (order._id === selectedOrder._id) {
-              if (actionType === 'markPaid') {
-                return { ...order, isPaid: true, paidAt: new Date() };
-              } else if (actionType === 'markDelivered') {
-                return { ...order, isDelivered: true, deliveredAt: new Date() };
-              }
-            }
-            return order;
-          }));
+        // Use the returned order data from the API
+        setOrders(orders.map(order => 
+          order._id === selectedOrder._id ? updatedOrder : order
+        ));
+        
+        // If we're viewing order details, update that too
+        if (orderId) {
+          setOrderDetails(updatedOrder);
         }
       }
       
@@ -291,6 +311,7 @@ const AdminOrdersPage = () => {
       }, 3000);
       
     } catch (err) {
+      console.error('Error updating order:', err);
       setActionError(err.message || `Failed to ${actionType} order`);
       setActionLoading(false);
     }
@@ -304,25 +325,242 @@ const AdminOrdersPage = () => {
   );
 
   const getOrderStatusChip = (order) => {
-    if (order.isDelivered) {
-      return <Chip label="Delivered" color="success" size="small" />;
-    } else if (order.isPaid) {
-      return <Chip label="Processing" color="primary" size="small" />;
-    } else {
-      return <Chip label="Pending Payment" color="warning" size="small" />;
+    // Use the status field directly
+    switch(order.status) {
+      case 'delivered':
+        return <Chip label="Delivered" color="success" size="small" />;
+      case 'processing':
+        return <Chip label="Processing" color="primary" size="small" />;
+      case 'shipped':
+        return <Chip label="Shipped" color="info" size="small" />;
+      case 'cancelled':
+        return <Chip label="Cancelled" color="error" size="small" />;
+      case 'pending':
+      default:
+        return <Chip label="Pending" color="warning" size="small" />;
     }
+  };
+
+  // Order Detail Rendering
+  const renderOrderDetails = () => {
+    if (!orderDetails) return null;
+    
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" component="h1">
+            Order Details: #{orderDetails._id}
+          </Typography>
+          <Button 
+            component={RouterLink}
+            to="/admin/orders"
+            startIcon={<ViewList />}
+            variant="outlined"
+          >
+            Back to Orders
+          </Button>
+        </Box>
+        
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+        
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Items
+              </Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Product</TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell align="right">Price</TableCell>
+                      <TableCell align="right">Qty</TableCell>
+                      <TableCell align="right">Subtotal</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {orderDetails.orderItems?.map((item) => (
+                      <TableRow key={item._id}>
+                        <TableCell>
+                          <img 
+                            src={item.image} 
+                            alt={item.name} 
+                            width="50" 
+                            height="50" 
+                            style={{ objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                        </TableCell>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell align="right">${item.price?.toFixed(2)}</TableCell>
+                        <TableCell align="right">{item.qty}</TableCell>
+                        <TableCell align="right">${(item.price * item.qty)?.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+            
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Shipping Information
+              </Typography>
+              <Typography variant="body1">
+                <strong>Name:</strong> {orderDetails.user?.name}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Email:</strong> {orderDetails.user?.email}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Address:</strong> {orderDetails.shippingAddress?.address}, 
+                {orderDetails.shippingAddress?.city}, {orderDetails.shippingAddress?.postalCode}, 
+                {orderDetails.shippingAddress?.country}
+              </Typography>
+              <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body1" sx={{ mr: 1 }}>
+                  <strong>Delivery Status:</strong>
+                </Typography>
+                {orderDetails.isDelivered ? (
+                  <Chip 
+                    label={`Delivered on ${formatDate(orderDetails.deliveredAt)}`} 
+                    color="success" 
+                    variant="outlined" 
+                  />
+                ) : (
+                  <Chip 
+                    label="Not Delivered" 
+                    color="error" 
+                    variant="outlined" 
+                  />
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Order Summary
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body1">Items</Typography>
+                <Typography variant="body1">${orderDetails.itemsPrice?.toFixed(2)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body1">Shipping</Typography>
+                <Typography variant="body1">${orderDetails.shippingPrice?.toFixed(2)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body1">Tax</Typography>
+                <Typography variant="body1">${orderDetails.taxPrice?.toFixed(2)}</Typography>
+              </Box>
+              <Divider sx={{ my: 1 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="h6">Total</Typography>
+                <Typography variant="h6">${orderDetails.totalPrice?.toFixed(2)}</Typography>
+              </Box>
+            </Paper>
+            
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Payment Information
+              </Typography>
+              <Typography variant="body1">
+                <strong>Method:</strong> {orderDetails.paymentMethod}
+              </Typography>
+              <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body1" sx={{ mr: 1 }}>
+                  <strong>Payment Status:</strong>
+                </Typography>
+                {orderDetails.isPaid ? (
+                  <Chip 
+                    label={`Paid on ${formatDate(orderDetails.paidAt)}`} 
+                    color="success" 
+                    variant="outlined" 
+                  />
+                ) : (
+                  <Chip 
+                    label="Not Paid" 
+                    color="error" 
+                    variant="outlined" 
+                  />
+                )}
+              </Box>
+            </Paper>
+            
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Actions
+              </Typography>
+              
+              <Grid container spacing={2}>
+                {orderDetails.status === 'pending' && (
+                  <Grid item xs={12}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      onClick={() => handleActionClick(orderDetails, 'markPaid')}
+                    >
+                      Mark as Paid
+                    </Button>
+                  </Grid>
+                )}
+                
+                {orderDetails.status === 'processing' && (
+                  <Grid item xs={12}>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      fullWidth
+                      onClick={() => handleActionClick(orderDetails, 'markDelivered')}
+                    >
+                      Mark as Delivered
+                    </Button>
+                  </Grid>
+                )}
+                
+                <Grid item xs={12}>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    fullWidth
+                    onClick={() => handleActionClick(orderDetails, 'delete')}
+                  >
+                    Delete Order
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Container>
+    );
   };
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
-          <CircularProgress />
-        </Box>
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Loading...
+        </Typography>
       </Container>
     );
   }
+  
+  // If orderId is provided, render order details page
+  if (orderId) {
+    return renderOrderDetails();
+  }
 
+  // Otherwise render orders list page
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
@@ -403,7 +641,7 @@ const AdminOrdersPage = () => {
                     </TableCell>
                     <TableCell align="right">${order.totalPrice.toFixed(2)}</TableCell>
                     <TableCell>
-                      {order.isPaid ? (
+                      {order.isPaid || order.status !== 'pending' ? (
                         <Box>
                           <Typography variant="body2" color="success.main">
                             Paid
@@ -432,7 +670,7 @@ const AdminOrdersPage = () => {
                         <VisibilityIcon />
                       </IconButton>
                       
-                      {!order.isPaid && (
+                      {order.status === 'pending' && (
                         <IconButton
                           size="small"
                           sx={{ mr: 1 }}
@@ -443,7 +681,7 @@ const AdminOrdersPage = () => {
                         </IconButton>
                       )}
                       
-                      {order.isPaid && !order.isDelivered && (
+                      {order.status === 'processing' && (
                         <IconButton
                           size="small"
                           sx={{ mr: 1 }}

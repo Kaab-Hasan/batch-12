@@ -48,7 +48,7 @@ export const getOrderById = async (req, res) => {
     // Find order and populate with user information and product details
     const order = await Order.findById(req.params.id)
       .populate('user', 'name email')
-      .populate('products.product', 'name images price');
+      .populate('orderItems.product', 'name image price');
 
     // Check if order exists and if user has permission to view it
     if (!order) {
@@ -80,15 +80,23 @@ export const updateOrderToPaid = async (req, res) => {
 
     // Update order details
     order.status = 'processing';
+    order.isPaid = true;
+    order.paidAt = Date.now();
     order.paymentResult = {
-      id: req.body.id,
-      status: req.body.status,
-      update_time: req.body.update_time,
-      email_address: req.body.email_address,
+      id: req.body.id || 'manual-admin',
+      status: req.body.status || 'completed',
+      update_time: req.body.update_time || new Date().toISOString(),
+      email_address: req.body.email_address || (req.user ? req.user.email : 'admin@example.com'),
     };
 
     const updatedOrder = await order.save();
-    res.json(updatedOrder);
+    
+    // Populate the user information to return a complete order object
+    const populatedOrder = await Order.findById(updatedOrder._id)
+      .populate('user', 'name email')
+      .populate('orderItems.product', 'name image price');
+      
+    res.json(populatedOrder);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -117,11 +125,18 @@ export const updateOrderStatus = async (req, res) => {
     
     // If status is 'delivered', set delivered date
     if (status === 'delivered') {
+      order.isDelivered = true;
       order.deliveredAt = Date.now();
     }
 
     const updatedOrder = await order.save();
-    res.json(updatedOrder);
+    
+    // Populate the user information to return a complete order object
+    const populatedOrder = await Order.findById(updatedOrder._id)
+      .populate('user', 'name email')
+      .populate('orderItems.product', 'name image price');
+      
+    res.json(populatedOrder);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
@@ -135,7 +150,7 @@ export const getUserOrders = async (req, res) => {
   try {
     // Find all orders for the current user
     const orders = await Order.find({ user: req.user._id })
-      .populate('products.product', 'name images price')
+      .populate('orderItems.product', 'name image price')
       .sort({ createdAt: -1 });
 
     res.json(orders);
@@ -167,9 +182,15 @@ export const getOrders = async (req, res) => {
     // Get orders with pagination and populate user information
     const orders = await Order.find(query)
       .populate('user', 'id name email')
+      .populate('orderItems.product', 'name image price')
       .limit(pageSize)
       .skip(pageSize * (page - 1))
       .sort({ createdAt: -1 });
+    
+    // Log the first order to see its structure
+    if (orders.length > 0) {
+      console.log('Sample order structure:', JSON.stringify(orders[0], null, 2));
+    }
     
     res.json({
       orders,
@@ -178,7 +199,7 @@ export const getOrders = async (req, res) => {
       totalOrders: count
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error getting orders:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

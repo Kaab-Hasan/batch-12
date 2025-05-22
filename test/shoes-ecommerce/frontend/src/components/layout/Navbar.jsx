@@ -155,7 +155,7 @@ const Navbar = () => {
               </ListItemIcon>
               <ListItemText primary="Profile" />
             </ListItem>
-            <ListItem button component={RouterLink} to="/orders">
+            <ListItem button component={RouterLink} to={isAdmin() ? "/admin/orders" : "/orders"}>
               <ListItemIcon>
                 <ShoppingBag />
               </ListItemIcon>
@@ -341,7 +341,7 @@ const Navbar = () => {
                   </MenuItem>
                   <MenuItem
                     component={RouterLink}
-                    to="/orders"
+                    to={isAdmin() ? "/admin/orders" : "/orders"}
                     onClick={handleCloseUserMenu}
                   >
                     <ListItemIcon>

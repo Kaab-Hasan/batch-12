@@ -97,9 +97,15 @@ const AdminUsersPage = () => {
         // Ensure we're working with an array
         const usersArray = Array.isArray(data) ? data : 
                           (data.users ? data.users : []);
+                
+        // Map role to isAdmin for consistency in the UI
+        const processedUsers = usersArray.map(user => ({
+          ...user,
+          isAdmin: user.isAdmin || (user.role === 'admin')
+        }));
         
-        setUsers(usersArray);
-        setFilteredUsers(usersArray);
+        setUsers(processedUsers);
+        setFilteredUsers(processedUsers);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching users:', err);
@@ -153,7 +159,7 @@ const AdminUsersPage = () => {
     setEditFormData({
       name: user.name || '',
       email: user.email || '',
-      isAdmin: Boolean(user.isAdmin)
+      isAdmin: user.isAdmin || (user.role === 'admin')
     });
     setEditDialogOpen(true);
     setActionError('');
@@ -181,13 +187,20 @@ const AdminUsersPage = () => {
       setActionError('');
       setActionSuccess('');
       
+      // Map isAdmin to role for the backend
+      const requestData = {
+        name: editFormData.name,
+        email: editFormData.email,
+        role: editFormData.isAdmin ? 'admin' : 'user'
+      };
+      
       const response = await fetch(`${config.API_URL}/users/${selectedUser._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`,
         },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(requestData),
       });
       
       if (!response.ok) {
@@ -198,6 +211,11 @@ const AdminUsersPage = () => {
       const responseData = await response.json();
       // Make sure we get a valid user object back
       const updatedUser = responseData.user || responseData;
+      
+      // Map role back to isAdmin for frontend
+      if (updatedUser && !('isAdmin' in updatedUser) && updatedUser.role) {
+        updatedUser.isAdmin = updatedUser.role === 'admin';
+      }
       
       const updatedUsers = users.map(u => 
         u._id === selectedUser._id 
@@ -340,7 +358,7 @@ const AdminUsersPage = () => {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>
-                      {user.isAdmin ? (
+                      {user.isAdmin || user.role === 'admin' ? (
                         <Chip 
                           icon={<AdminIcon />}
                           label="Admin" 

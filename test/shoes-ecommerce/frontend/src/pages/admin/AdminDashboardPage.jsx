@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '@mui/material/styles';
-import { API_URL, USE_MOCK_DATA } from '../../config';
+import config from '../../config';
 
 // Mock data for dashboard
 const mockStats = {
@@ -82,8 +82,8 @@ function AdminDashboardPage() {
         setLoading(true);
         setError(null);
 
-        // Fetch from API
-        const response = await fetch(`${API_URL}/dashboard/stats`, {
+        console.log('Fetching dashboard stats...');
+        const response = await fetch(`${config.API_URL}/dashboard/stats`, {
           headers: {
             Authorization: `Bearer ${user.token}`,
             'Content-Type': 'application/json'
@@ -96,18 +96,20 @@ function AdminDashboardPage() {
         }
 
         const data = await response.json();
+        console.log('Dashboard data received:', data);
         setStats(data);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError('Unable to load dashboard data. Using sample data temporarily.');
-        setStats(mockStats); // Fallback to mock data
+        setError('Unable to load dashboard data. Please refresh or try again later.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardStats();
-  }, [user.token]);
+    if (user?.token) {
+      fetchDashboardStats();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -241,20 +243,21 @@ function AdminDashboardPage() {
                     <TableRow key={`order-${order.id || index}`} hover>
                       <TableCell>#{order.id}</TableCell>
                       <TableCell>{order.customer}</TableCell>
-                      <TableCell>{order.date}</TableCell>
+                      <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
                       <TableCell>{formatCurrency(order.total)}</TableCell>
                       <TableCell>
                         <Box
                           sx={{
                             bgcolor: 
-                              order.status === 'Delivered' ? 'success.light' : 
-                              order.status === 'Processing' ? 'warning.light' : 
-                              order.status === 'Shipped' ? 'info.light' : 
-                              'error.light',
+                              order.status === 'delivered' ? 'success.light' : 
+                              order.status === 'processing' ? 'primary.light' : 
+                              order.status === 'shipped' ? 'info.light' : 
+                              'warning.light',
                             px: 1,
                             py: 0.5,
                             borderRadius: 1,
-                            display: 'inline-block'
+                            display: 'inline-block',
+                            textTransform: 'capitalize'
                           }}
                         >
                           {order.status}
@@ -262,6 +265,11 @@ function AdminDashboardPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {(!stats?.recentOrders || stats.recentOrders.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">No recent orders</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -316,18 +324,23 @@ function AdminDashboardPage() {
             <List>
               {stats?.popularProducts?.map((product) => (
                 <ListItem 
-                  key={`popular-product-${product.id || product.name}`} 
+                  key={`popular-product-${product._id || product.name}`} 
                   sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}
                 >
                   <ListItemText 
                     primary={product.name} 
-                    secondary={`Stock: ${product.stock} | Sold: ${product.sold}`} 
+                    secondary={`Sold: ${product.sold}`} 
                   />
                   <Typography variant="body2" color="primary" fontWeight="bold">
                     {formatCurrency(product.price)}
                   </Typography>
                 </ListItem>
               ))}
+              {(!stats?.popularProducts || stats.popularProducts.length === 0) && (
+                <ListItem>
+                  <ListItemText primary="No popular products yet" />
+                </ListItem>
+              )}
             </List>
           </Paper>
         </Grid>
